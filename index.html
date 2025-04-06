@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hiru Pharmacy - Your Complete Health Partner in Embilipitiya</title> <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.163.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.163.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                     colors: { /* As defined before */
+                        primary: { light: '#2fbb70', DEFAULT: '#1a9d55', dark: '#117e45' },
+                        secondary: '#f0fdf4', accent: '#10b981',
+                        neutral: { light: '#f3f4f6', DEFAULT: '#6b7280', dark: '#1f2937' }
+                    },
+                    fontFamily: { /* As defined before */
+                        sans: ['Inter', 'sans-serif'], sinhala: ['Noto Sans Sinhala', 'sans-serif']
+                    },
+                    animation: { /* As defined before */
+                        'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.6s ease-out forwards', 'subtle-pulse': 'subtlePulse 2s infinite ease-in-out'
+                    },
+                    keyframes: { /* As defined before */
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        subtlePulse: { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.03)' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Sinhala:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* Base styles from previous example: body, headings, .sinhala-text, .page, .page.active, canvas placeholders, #main-nav, .animated-section, .nav-link.active, .content-card, icon/image placeholders */
+        body { font-family: 'Inter', 'Noto Sans Sinhala', sans-serif; background-color: theme('colors.secondary'); color: theme('colors.neutral.dark'); }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Inter', 'Noto Sans Sinhala', sans-serif; }
+        .sinhala-text { font-family: 'Noto Sans Sinhala', sans-serif; }
+        .page { display: none; } .page.active { display: block; }
+        #p5-canvas-container, #threejs-canvas-container { width: 100%; height: 300px; background-color: theme('colors.neutral.light'); border: 1px dashed theme('colors.neutral.DEFAULT'); display: flex; align-items: center; justify-content: center; color: theme('colors.neutral.DEFAULT'); font-style: italic; margin: 2rem 0; position: relative; overflow: hidden; }
+        #threejs-canvas-container { height: 400px; }
+        #main-nav { position: sticky; top: 0; z-index: 50; transition: background-color 0.3s ease, box-shadow 0.3s ease; background-color: white; /* Start with white bg */ }
+        #main-nav.scrolled { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .animated-section { opacity: 0; }
+        .animated-section.animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        .animated-section.animate-slide-up { animation: slideUp 0.8s ease-out forwards; }
+        .nav-link { position: relative; padding-bottom: 4px; } /* Add padding for underline space */
+        .nav-link.active { font-weight: 700; color: theme('colors.primary.DEFAULT'); }
+        .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background-color: theme('colors.primary.DEFAULT'); }
+        .content-card { background-color: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid theme('colors.neutral.light'); }
+        .content-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); }
+        .icon-placeholder { width: 48px; height: 48px; background-color: theme('colors.primary.light'); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: white; font-weight: bold; flex-shrink: 0; } /* Added flex-shrink */
+        .image-placeholder { width: 100%; height: 200px; background-color: theme('colors.neutral.light'); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: theme('colors.neutral.DEFAULT'); font-style: italic; margin-bottom: 1rem; border: 1px dashed theme('colors.neutral.DEFAULT'); }
+
+        /* Additional Styles */
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu { display: none; position: absolute; background-color: white; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-radius: 8px; z-index: 60; min-width: 200px; padding: 0.5rem 0; }
+        .dropdown-menu a, .dropdown-menu button { display: block; padding: 0.75rem 1.25rem; color: theme('colors.neutral.dark'); white-space: nowrap; }
+        .dropdown-menu a:hover, .dropdown-menu button:hover { background-color: theme('colors.neutral.light'); color: theme('colors.primary.DEFAULT'); }
+
+        /* Badge for Cart */
+        .cart-badge { position: absolute; top: -5px; right: -10px; background-color: theme('colors.accent'); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* Helper class for backend dependency */
+        .requires-backend::after { content: ' (Requires Backend Integration)'; font-style: italic; font-size: 0.75rem; color: theme('colors.neutral.DEFAULT'); margin-left: 4px; }
+
+    </style>
+</head>
+<body class="bg-secondary text-neutral-dark font-sans">
+
+    <header class="bg-gradient-to-r from-primary-dark to-primary text-white py-4 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div onclick="showPage('home')" class="cursor-pointer">
+                <h1 class="text-3xl font-bold">Hiru Pharmacy</h1>
+                <p class="text-xs font-light sinhala-text hidden sm:block">එඹිලිපිටියේ ඔබේ විශ්වාසනීය සෞඛ්‍ය සගයා</p>
+            </div>
+
+            <div class="flex-grow mx-4 max-w-xl">
+                <div class="relative">
+                     <input type="search" placeholder="Search Medications, Products, Health Info..." class="w-full px-4 py-2 pl-10 border border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-primary-light text-sm text-neutral-dark" aria-label="Search Website">
+                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral">
+                        <i class="fa-solid fa-search"></i>
+                     </span>
+                 </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="showPage('user-account')" class="text-white hover:text-primary-light transition duration-200 requires-backend" aria-label="User Account">
+                    <i class="fa-solid fa-user fa-lg"></i>
+                </button>
+                 <button onclick="showPage('cart')" class="text-white hover:text-primary-light transition duration-200 relative requires-backend" aria-label="Shopping Cart">
+                    <i class="fa-solid fa-cart-shopping fa-lg"></i>
+                    <span class="cart-badge">0</span> </button>
+                <button onclick="showPage('login')" class="hidden md:inline-block bg-white text-primary text-xs font-semibold px-3 py-1 rounded-full hover:bg-neutral-light transition duration-300 requires-backend">Login</button>
+                 <button onclick="showPage('register')" class="hidden md:inline-block bg-accent text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-primary-dark transition duration-300 requires-backend">Register</button>
+            </div>
+        </div>
+    </header>
+
+    <nav id="main-nav" class="bg-white py-3 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 flex justify-center items-center">
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                <button onclick="showPage('home')" class="nav-link text-neutral hover:text-primary font-semibold transition duration-200 active">මුල් පිටුව</button>
+
+                <div class="relative dropdown">
+                    <button class="nav-link text-neutral hover:text-primary font-semibold transition duration-200 flex items-center gap-1">Shop Products <i class="fa-solid fa-chevron-down fa-xs"></i></button>
+                    <div class="dropdown-menu mt-1">
+                        <a href="#" onclick="showPage('products-all'); return false;">All Products</a>
+                        <a href="#" onclick="showPage('products-otc'); return false;">OTC Medicine</a>
+                        <a href="#" onclick="showPage('products-vitamins'); return false;">Vitamins & Supplements</a>
+                        <a href="#" onclick="showPage('products-personal'); return false;">Personal Care</a>
+                        <a href="#" onclick="showPage('products-devices'); return false;">Medical Devices</a>
+                         <a href="#" onclick="showPage('products-baby'); return false;">Mother & Baby</a>
+                         <a href="#" onclick="showPage('products-firstaid'); return false;">First Aid</a>
+                         <a href="#" onclick="showPage('products-ayurveda'); return false;">Ayurveda</a>
+                         <a href="#" onclick="showPage('promotions'); return false;" class="text-accent font-semibold">Special Offers</a>
+                    </div>
+                </div>
+
+                <div class="relative dropdown">
+                     <button class="nav-link text-neutral hover:text-primary font-semibold transition duration-200 flex items-center gap-1 sinhala-text">බෙහෙත් වට්ටෝරු <i class="fa-solid fa-chevron-down fa-xs"></i></button>
+                     <div class="dropdown-menu mt-1">
+                        <button onclick="showPage('prescription-upload'); return false;">Upload Prescription <span class="requires-backend"></span></button>
+                        <button onclick="showPage('prescription-refill'); return false;">Request Refill <span class="requires-backend"></span></button>
+                        <button onclick="showPage('prescription-transfer'); return false;">Transfer Prescription <span class="requires-backend"></span></button>
+                        <button onclick="showPage('prescription-info'); return false;">How It Works</button>
+                     </div>
+                </div>
+
+                 <div class="relative dropdown">
+                     <button class="nav-link text-neutral hover:text-primary font-semibold transition duration-200 flex items-center gap-1 sinhala-text">සෞඛ්‍ය තොරතුරු <i class="fa-solid fa-chevron-down fa-xs"></i></button>
+                    <div class="dropdown-menu mt-1">
+                        <button onclick="showPage('health-hub'); return false;">Health Hub Home</button>
+                        <button onclick="showPage('drug-info'); return false;">Drug Information <span class="requires-backend"></span></button>
+                        <button onclick="showPage('condition-info'); return false;">Health Conditions A-Z</button>
+                         <button onclick="showPage('blog'); return false;">Health Blog</button>
+                        <button onclick="showPage('faq'); return false;">FAQ</button>
+                    </div>
+                </div>
+
+                 <div class="relative dropdown">
+                     <button class="nav-link text-neutral hover:text-primary font-semibold transition duration-200 flex items-center gap-1 sinhala-text">සේවාවන් <i class="fa-solid fa-chevron-down fa-xs"></i></button>
+                     <div class="dropdown-menu mt-1">
+                         <button onclick="showPage('services-overview'); return false;">All Services</button>
+                         <button onclick="showPage('consultation'); return false;">Consultation</button>
+                         <button onclick="showPage('vaccination'); return false;">Vaccinations</button>
+                         <button onclick="showPage('screening'); return false;">Health Screenings</button>
+                         <button onclick="showPage('delivery-info'); return false;">Home Delivery</button>
+                         <button onclick="showPage('med-sync'); return false;">Medication Sync</button>
+                     </div>
+                </div>
+
+                <button onclick="showPage('about')" class="nav-link text-neutral hover:text-primary font-semibold transition duration-200">අප ගැන</button>
+                <button onclick="showPage('contact')" class="nav-link text-neutral hover:text-primary font-semibold transition duration-200">අපව අමතන්න</button>
+
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-12 min-h-screen">
+
+        <section id="home" class="page active animated-section">
+             <div class="text-center py-16 rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-xl mb-12 animate-fade-in">
+                 <h2 class="text-4xl font-bold mb-4">Welcome to Hiru Pharmacy</h2>
+                 <p class="text-xl max-w-3xl mx-auto mb-6 font-light sinhala-text">එඹිලිපිටියේ ඔබේ සහ පවුලේ සැමගේ සෞඛ්‍ය අවශ්‍යතා සඳහා විශ්වාසනීය, දැරිය හැකි, නවීන සහ සැලකිලිමත් සේවාවක්.</p>
+                 <div class="mt-8 space-x-4">
+                     <button onclick="showPage('products-all')" class="bg-white text-primary font-semibold px-8 py-3 rounded-full shadow hover:bg-neutral-light transition duration-300 animate-subtle-pulse">Shop Products</button>
+                     <button onclick="showPage('prescription-upload')" class="bg-transparent border-2 border-white text-white font-semibold px-8 py-3 rounded-full shadow hover:bg-white hover:text-primary transition duration-300">Upload Prescription</button>
+                 </div>
+             </div>
+
+              <div class="mb-12 animate-slide-up" style="animation-delay: 0.2s;">
+                <h3 class="text-2xl font-semibold text-primary-dark mb-4 text-center">Explore Our Services</h3>
+                <div id="threejs-canvas-container">
+                   Three.js Canvas Placeholder - Interactive 3D Element
+                </div>
+             </div>
+
+            <div class="mb-12 animate-slide-up" style="animation-delay: 0.4s;">
+                <h3 class="text-3xl font-bold text-primary-dark mb-6 text-center">Why Choose Hiru Pharmacy?</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="content-card text-center">
+                        <div class="icon-placeholder mx-auto"><i class="fa-solid fa-prescription-bottle-medical fa-lg"></i></div>
+                        <h4 class="font-semibold text-xl mb-2">Expert Care</h4>
+                        <p class="text-neutral sinhala-text text-sm">සුදුසුකම් ලත් ඖෂධවේදීන්ගෙන් නිවැරදි උපදෙස්.</p>
+                    </div>
+                     <div class="content-card text-center">
+                         <div class="icon-placeholder mx-auto"><i class="fa-solid fa-truck-fast fa-lg"></i></div>
+                        <h4 class="font-semibold text-xl mb-2">Fast Delivery</h4>
+                        <p class="text-neutral sinhala-text text-sm">එඹිලිපිටිය අවට ඉක්මන් බෙදාහැරීමේ සේවාව.</p>
+                    </div>
+                    <div class="content-card text-center">
+                         <div class="icon-placeholder mx-auto"><i class="fa-solid fa-tags fa-lg"></i></div>
+                        <h4 class="font-semibold text-xl mb-2">Great Value</h4>
+                        <p class="text-neutral sinhala-text text-sm">තරඟකාරී මිල ගණන් සහ විශේෂ දීමනා.</p>
+                    </div>
+                     <div class="content-card text-center">
+                         <div class="icon-placeholder mx-auto"><i class="fa-solid fa-laptop-medical fa-lg"></i></div>
+                        <h4 class="font-semibold text-xl mb-2">Online Convenience</h4>
+                        <p class="text-neutral sinhala-text text-sm">පහසු Online බෙහෙත් වට්ටෝරු Upload කිරීම.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center mb-12 animate-slide-up" style="animation-delay: 0.6s;">
+                <h3 class="text-2xl font-semibold text-accent mb-3">විශේෂ දීමනා සහ වට්ටම්!</h3>
+                <p class="text-neutral mb-5 sinhala-text">නවතම සෞඛ්‍ය නිෂ්පාදන සඳහා අපගේ විශේෂ දීමනා පිටුව බලන්න.</p>
+                <button onclick="showPage('promotions')" class="bg-accent text-white font-semibold px-6 py-2 rounded-full hover:bg-primary-dark transition duration-300">View Promotions</button>
+             </div>
+
+             <div class="animate-slide-up" style="animation-delay: 0.8s;">
+                 <h3 class="text-3xl font-bold text-primary-dark mb-6 text-center">පාරිභෝගික අදහස්</h3>
+                 <div class="grid md:grid-cols-2 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow-md italic border-l-4 border-primary"> /* ... */ </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md italic border-l-4 border-primary"> /* ... */ </div>
+                 </div>
+             </div>
+        </section>
+
+        <section id="products-all" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">All Products</h2>
+             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 requires-backend">
+                 <div class="content-card group">
+                     <div class="image-placeholder group-hover:opacity-80 transition-opacity">Product Image Placeholder</div>
+                     <h3 class="font-semibold text-lg mt-2 truncate">Product Name Placeholder</h3>
+                     <p class="text-sm text-neutral mb-2">Short description or brand</p>
+                     <div class="flex justify-between items-center">
+                        <span class="text-primary font-bold">Rs. XXXX.XX</span>
+                        <button class="bg-primary text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Add <i class="fa-solid fa-cart-plus"></i></button>
+                     </div>
+                     <a href="#" onclick="showPage('product-detail-example'); return false;" class="absolute inset-0" aria-label="View Product Details"></a> </div>
+                 <div class="content-card group"> /* ... */ </div>
+                  <div class="content-card group"> /* ... */ </div>
+                  <div class="content-card group"> /* ... */ </div>
+             </div>
+             <div class="text-center mt-8 requires-backend">Pagination Controls Placeholder</div>
+        </section>
+
+        <section id="product-detail-example" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Product Name Placeholder</h2>
+             <div class="grid md:grid-cols-2 gap-10 content-card requires-backend">
+                 <div>
+                     <div class="image-placeholder h-80">Main Product Image</div>
+                     </div>
+                 <div>
+                     <p class="text-sm text-neutral mb-1">Brand Name</p>
+                     <h3 class="text-2xl font-bold mb-3">Full Product Name Placeholder</h3>
+                     <p class="text-2xl font-bold text-primary mb-4">Rs. XXXX.XX</p>
+                     <p class="text-neutral mb-4">Detailed product description goes here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                      <div class="mb-4">
+                        <label for="quantity" class="text-sm font-semibold">Quantity:</label>
+                        <input type="number" id="quantity" value="1" min="1" class="border rounded p-1 w-16 ml-2">
+                      </div>
+                     <button class="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-primary-dark transition duration-300 flex items-center justify-center gap-2">
+                         <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                     </button>
+                     <div class="mt-6 text-sm space-y-2">
+                         <h4 class="font-semibold">Details:</h4>
+                         <ul class="list-disc list-inside text-neutral">
+                             <li>Ingredient 1, Ingredient 2...</li>
+                             <li>Usage Instructions...</li>
+                             <li>Warnings & Precautions...</li>
+                             <li>Availability: In Stock / Out of Stock</li>
+                         </ul>
+                     </div>
+                 </div>
+             </div>
+        </section>
+
+        <section id="products-otc" class="page animated-section"> <h2 class="text-center text-xl">OTC Products Page Placeholder</h2> </section>
+         <section id="products-vitamins" class="page animated-section"> <h2 class="text-center text-xl">Vitamins Page Placeholder</h2> </section>
+         <section id="products-personal" class="page animated-section"> <h2 class="text-center text-xl">Personal Care Page Placeholder</h2> </section>
+         <section id="products-devices" class="page animated-section"> <h2 class="text-center text-xl">Medical Devices Page Placeholder</h2> </section>
+         <section id="products-baby" class="page animated-section"> <h2 class="text-center text-xl">Mother & Baby Page Placeholder</h2> </section>
+         <section id="products-firstaid" class="page animated-section"> <h2 class="text-center text-xl">First Aid Page Placeholder</h2> </section>
+         <section id="products-ayurveda" class="page animated-section"> <h2 class="text-center text-xl">Ayurveda Page Placeholder</h2> </section>
+         <section id="promotions" class="page animated-section"> <h2 class="text-center text-xl">Promotions Page Placeholder</h2> </section>
+
+         <section id="prescription-upload" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Upload Your Prescription</h2>
+             <div class="max-w-2xl mx-auto content-card">
+                 <p class="text-center text-neutral mb-6 sinhala-text">ඔබගේ වෛද්‍ය බෙහෙත් වට්ටෝරුවේ පැහැදිලි පින්තූරයක් හෝ PDF ගොනුවක් පහතින් Upload කරන්න. අපගේ ඖෂධවේදියෙකු එය ಪರಿಶೀಲ කර (verify කර) ඔබ හා සම්බන්ධ වනු ඇත.</p>
+                 <div class="border-2 border-dashed border-accent rounded-lg p-6 text-center bg-green-50 requires-backend">
+                      <p class="text-accent font-semibold mb-2">Drag & Drop or Click to Upload</p>
+                      <input type="file" class="text-sm text-neutral" aria-label="Upload Prescription File"/>
+                      <p class="text-xs text-neutral-dark mt-2">Supports: JPG, PNG, PDF (Max 5MB)</p>
+                      <button class="mt-4 bg-primary text-white px-6 py-2 rounded-full text-sm hover:bg-primary-dark">Submit Prescription</button>
+                  </div>
+                  <p class="text-xs text-neutral text-center mt-4">By uploading, you agree to our Prescription Policy and Terms of Service.</p>
+             </div>
+         </section>
+         <section id="prescription-refill" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Request Prescription Refill</h2>
+              <div class="max-w-2xl mx-auto content-card requires-backend">
+                 <p class="text-center text-neutral mb-6">Login to your account to view past prescriptions and easily request refills, or fill out the form below.</p>
+                 <form class="space-y-4">
+                     <input type="text" placeholder="Your Full Name" required class="input-field"/>
+                     <input type="text" placeholder="Phone Number" required class="input-field"/>
+                     <input type="text" placeholder="Prescription Number (Rx# if known)" class="input-field"/>
+                     <input type="text" placeholder="Medication Name(s)" required class="input-field"/>
+                     <textarea placeholder="Additional Notes (e.g., preferred pickup/delivery time)" rows="3" class="input-field"></textarea>
+                     <button type="submit" class="button-primary w-full">Request Refill</button>
+                 </form>
+              </div>
+         </section>
+          <section id="prescription-transfer" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Transfer Your Prescriptions to Hiru Pharmacy</h2>
+              <div class="max-w-2xl mx-auto content-card requires-backend">
+                 <p class="text-center text-neutral mb-6">Switching to Hiru Pharmacy is easy! Provide details below, and we'll handle the transfer process with your previous pharmacy.</p>
+                 <form class="space-y-4">
+                     <h3 class="font-semibold">Your Information:</h3>
+                     <input type="text" placeholder="Your Full Name" required class="input-field"/>
+                     <input type="text" placeholder="Your Phone Number" required class="input-field"/>
+                     <input type="date" placeholder="Your Date of Birth" required class="input-field"/>
+
+                     <h3 class="font-semibold mt-4">Previous Pharmacy Information:</h3>
+                     <input type="text" placeholder="Previous Pharmacy Name" required class="input-field"/>
+                     <input type="text" placeholder="Previous Pharmacy Phone Number" required class="input-field"/>
+
+                      <h3 class="font-semibold mt-4">Medication(s) to Transfer:</h3>
+                     <textarea placeholder="List the medication names or prescription numbers you wish to transfer." rows="4" required class="input-field"></textarea>
+
+                     <button type="submit" class="button-primary w-full">Request Transfer</button>
+                 </form>
+              </div>
+          </section>
+         <section id="prescription-info" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">How Prescription Filling Works</h2>
+             <div class="max-w-3xl mx-auto content-card space-y-4">
+                 <h3 class="font-semibold text-xl">Our Process:</h3>
+                 <ol class="list-decimal list-inside space-y-2 text-neutral">
+                    <li><strong class="text-neutral-dark">Submit Your Prescription:</strong> Upload via our website/app, bring it in person, or ask your doctor to send it electronically (if applicable).</li>
+                    <li><strong class="text-neutral-dark">Verification:</strong> Our licensed pharmacists verify the prescription details for accuracy and safety (checking dosage, interactions, etc.). We may contact you or your doctor if clarification is needed.</li>
+                    <li><strong class="text-neutral-dark">Preparation:</strong> We carefully dispense the correct medication according to the prescription.</li>
+                    <li><strong class="text-neutral-dark">Final Check & Counselling:</strong> A final check is performed. When you collect or receive your medication, our pharmacist can provide counselling on proper usage, side effects, and answer your questions.</li>
+                    <li><strong class="text-neutral-dark">Pickup or Delivery:</strong> Collect your medication in-store or opt for our convenient home delivery service within the Embilipitiya area.</li>
+                 </ol>
+                 <h3 class="font-semibold text-xl mt-6">Important Notes:</h3>
+                 <ul class="list-disc list-inside space-y-1 text-neutral">
+                     <li>A valid prescription from a registered medical practitioner is required for all prescription medications.</li>
+                     <li>Please allow adequate time for verification and preparation.</li>
+                     <li>Bring identification when collecting certain medications.</li>
+                     <li>Inform us of any allergies or other medications you are taking.</li>
+                 </ul>
+                 <p class="mt-4 text-sm">For more details, please see our full <a href="#" onclick="showPage('policy-prescription'); return false;" class="text-primary hover:underline">Prescription Policy</a>.</p>
+             </div>
+         </section>
+
+        <section id="health-hub" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Health Hub - Your Resource Center</h2>
+              <div class="space-y-10">
+                 <div class="grid md:grid-cols-3 gap-6">
+                      <div class="content-card text-center">
+                        <div class="icon-placeholder mx-auto"><i class="fa-solid fa-pills fa-lg"></i></div>
+                         <h3 class="font-semibold text-lg">Drug Information</h3>
+                         <p class="text-sm text-neutral mb-3">Look up medication details.</p>
+                         <button onclick="showPage('drug-info')" class="button-secondary text-sm">Search Drugs</button>
+                      </div>
+                      <div class="content-card text-center">
+                        <div class="icon-placeholder mx-auto"><i class="fa-solid fa-book-medical fa-lg"></i></div>
+                         <h3 class="font-semibold text-lg">Health Conditions</h3>
+                         <p class="text-sm text-neutral mb-3">Learn about common ailments.</p>
+                         <button onclick="showPage('condition-info')" class="button-secondary text-sm">Browse Conditions</button>
+                      </div>
+                       <div class="content-card text-center">
+                        <div class="icon-placeholder mx-auto"><i class="fa-solid fa-blog fa-lg"></i></div>
+                         <h3 class="font-semibold text-lg">Health Blog</h3>
+                         <p class="text-sm text-neutral mb-3">Read our latest articles.</p>
+                         <button onclick="showPage('blog')" class="button-secondary text-sm">Read Blog</button>
+                      </div>
+                 </div>
+                 <div>
+                    <h3 class="text-2xl font-semibold text-primary mb-4">Featured Article</h3>
+                     <div class="content-card requires-backend"> </div>
+                 </div>
+                 <div>
+                     <h3 class="text-2xl font-semibold text-primary mb-4">Frequently Asked Questions</h3>
+                     <div class="space-y-4"> </div>
+                     <p class="text-center mt-4"><button onclick="showPage('faq')" class="text-primary hover:underline font-semibold">View All FAQs</button></p>
+                 </div>
+              </div>
+         </section>
+         <section id="drug-info" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Drug Information Database</h2>
+              <div class="max-w-2xl mx-auto content-card requires-backend">
+                <p class="text-center text-neutral mb-4">Search for information about medications (dosage, side effects, interactions). <strong class="text-red-600">Disclaimer: This information is for educational purposes only and does not substitute professional medical advice.</strong></p>
+                <input type="search" placeholder="Enter Drug Name (e.g., Paracetamol)" class="input-field w-full mb-4"/>
+                <div class="search-results min-h-[100px] border border-neutral-light rounded p-4 text-center text-neutral italic">
+                    Search results will appear here... (Requires reliable drug database integration)
+                </div>
+              </div>
+         </section>
+         <section id="condition-info" class="page animated-section">
+              <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Health Conditions A-Z</h2>
+               <div class="max-w-3xl mx-auto content-card requires-backend">
+                 <p class="text-center text-neutral mb-4">Browse information on common health conditions. <strong class="text-red-600">Disclaimer: Information provided is for general knowledge and does not replace consultation with a healthcare professional.</strong></p>
+                 <div class="text-center mb-4 space-x-2"> [ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z ] </div>
+                 <ul class="list-disc list-inside space-y-1 text-primary">
+                     <li><a href="#" class="hover:underline">Condition 1 (e.g., Diabetes)</a></li>
+                     <li><a href="#" class="hover:underline">Condition 2 (e.g., Hypertension)</a></li>
+                     <li><a href="#" class="hover:underline">Condition 3 (e.g., Common Cold)</a></li>
+                     </ul>
+               </div>
+         </section>
+         <section id="blog" class="page animated-section">
+            <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Health Blog</h2>
+             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 requires-backend">
+                 <div class="content-card">
+                    <div class="image-placeholder">Blog Post Image Placeholder</div>
+                    <h3 class="font-semibold text-lg mt-2">Blog Post Title Placeholder</h3>
+                    <p class="text-sm text-neutral my-2">Date Published | Author Name</p>
+                    <p class="text-neutral text-sm mb-3 sinhala-text">ලිපියේ කෙටි සාරාංශයක් මෙතන...</p>
+                    <a href="#" class="text-primary hover:underline text-sm font-semibold">Read More &rarr;</a>
+                </div>
+                 </div>
+             <div class="text-center mt-8 requires-backend">Pagination Controls Placeholder</div>
+         </section>
+          <section id="faq" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Frequently Asked Questions</h2>
+             <div class="max-w-3xl mx-auto space-y-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm"> <details> <summary>...</summary> <p>...</p> </details> </div>
+                 <div class="bg-white p-4 rounded-lg shadow-sm"> <details> <summary>Do you accept insurance?</summary> <p class="mt-2 ...">Currently, we primarily operate on a direct payment basis. Please contact us regarding specific insurance queries.</p> </details> </div>
+                 <div class="bg-white p-4 rounded-lg shadow-sm"> <details> <summary>Can I return medication?</summary> <p class="mt-2 ...">Due to regulations, dispensed medications generally cannot be returned. Please see our <a href='#' onclick='showPage("policy-returns"); return false;' class='text-primary hover:underline'>Returns Policy</a> for details.</p> </details> </div>
+                 </div>
+          </section>
+
+         <section id="services-overview" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Our Pharmacy Services</h2>
+             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="content-card"> /* Link to prescription filling */ </div>
+                <div class="content-card"> /* Link to Consultation */ </div>
+                <div class="content-card"> /* Link to Vaccinations */ </div>
+                <div class="content-card"> /* Link to Health Screenings */ </div>
+                <div class="content-card"> /* Link to Home Delivery */ </div>
+                <div class="content-card"> /* Link to Med Sync */ </div>
+             </div>
+         </section>
+          <section id="consultation" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Pharmacist Consultation</h2>
+             <div class="max-w-3xl mx-auto content-card">
+                 <p class="mb-4 text-neutral">Our experienced pharmacists are available to provide confidential advice on:</p>
+                 <ul class="list-disc list-inside space-y-2 mb-4 text-neutral">
+                    <li>Proper medication use, side effects, and interactions.</li>
+                    <li>Choosing appropriate Over-the-Counter (OTC) medications.</li>
+                    <li>Managing chronic conditions like diabetes or high blood pressure.</li>
+                    <li>Advice on using medical devices (e.g., inhalers, glucose meters).</li>
+                    <li>General health and wellness tips.</li>
+                 </ul>
+                 <p class="text-neutral">Walk-in consultations are welcome during opening hours. For detailed Medication Therapy Management (MTM) reviews, please <button onclick="showPage('contact')" class="text-primary hover:underline">contact us</button> to schedule an appointment.</p>
+             </div>
+         </section>
+          <section id="vaccination" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Vaccination Services</h2>
+              <div class="max-w-3xl mx-auto content-card">
+                 <p class="mb-4 text-neutral">Stay protected! We offer the following vaccination services (subject to availability and regulations):</p>
+                 <ul class="list-disc list-inside space-y-2 mb-4 text-neutral">
+                     <li>Flu Shots (Seasonal)</li>
+                     <li>Other common adult vaccinations (Placeholder - specify if offered, e.g., Tdap, Pneumonia)</li>
+                     </ul>
+                 <p class="text-neutral">Appointments may be required. Please <button onclick="showPage('contact')" class="text-primary hover:underline">contact us</button> for current availability and booking.</p>
+              </div>
+          </section>
+          <section id="screening" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Health Screenings</h2>
+              <div class="max-w-3xl mx-auto content-card">
+                 <p class="mb-4 text-neutral">Take proactive steps for your health with our basic screening services:</p>
+                  <ul class="list-disc list-inside space-y-2 mb-4 text-neutral">
+                     <li>Blood Pressure Monitoring</li>
+                     <li>Blood Glucose Checks (Random/Fasting - specify)</li>
+                     </ul>
+                 <p class="text-neutral">These screenings provide valuable health insights but do not replace regular check-ups with your doctor. Available during pharmacy hours.</p>
+              </div>
+          </section>
+         <section id="delivery-info" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Home Delivery Service</h2>
+             <div class="max-w-3xl mx-auto content-card">
+                  <p class="mb-4 text-neutral sinhala-text">අපගේ පහසු නිවසටම බෙදාහැරීමේ සේවාව මගින් ඔබේ ඖෂධ සහ සෞඛ්‍ය නිෂ්පාදන ලබා ගන්න.</p>
+                  <h3 class="font-semibold text-lg mt-4 mb-2">සේවා ප්‍රදේශය (Service Area):</h3>
+                  <p class="text-neutral mb-4">We currently deliver within Embilipitiya town limits and selected surrounding areas (e.g., Specify nearby towns/radius like Middeniya, Padalangala if applicable). Please contact us to confirm delivery to your specific location.</p>
+                  <h3 class="font-semibold text-lg mt-4 mb-2">බෙදාහැරීමේ ගාස්තු (Delivery Charges):</h3>
+                  <p class="text-neutral mb-4">A nominal delivery fee may apply based on distance and order value. Free delivery may be available for orders above a certain amount (e.g., Rs. 5000). Contact us for details.</p>
+                  <h3 class="font-semibold text-lg mt-4 mb-2">ඇණවුම් කරන්නේ කෙසේද (How to Order):</h3>
+                   <ul class="list-disc list-inside space-y-1 text-neutral">
+                       <li>Upload your prescription online.</li>
+                       <li>Call us directly at <a href="tel:0771234567" class="text-primary hover:underline">077 123 4567</a>.</li>
+                       <li>Order through our website's shopping cart (Requires E-commerce).</li>
+                   </ul>
+                  <h3 class="font-semibold text-lg mt-4 mb-2">බෙදාහැරීමේ වේලාවන් (Delivery Times):</h3>
+                  <p class="text-neutral">We aim for same-day or next-day delivery for orders placed before [Specify Cutoff Time, e.g., 2 PM]. We will confirm the estimated delivery time when you order.</p>
+             </div>
+         </section>
+         <section id="med-sync" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Medication Synchronization</h2>
+              <div class="max-w-3xl mx-auto content-card">
+                 <h3 class="font-semibold text-lg mb-2">Simplify Your Refills!</h3>
+                 <p class="mb-4 text-neutral">Tired of multiple trips to the pharmacy each month? Our Medication Synchronization (Med Sync) service aligns all your regular prescription refills to be ready for pickup or delivery on a single, convenient day each month.</p>
+                 <h4 class="font-semibold mb-1">Benefits:</h4>
+                  <ul class="list-disc list-inside space-y-1 mb-4 text-neutral">
+                      <li>One convenient pickup/delivery per month.</li>
+                      <li>Reduces risk of running out of medication.</li>
+                      <li>Easier medication management.</li>
+                      <li>Personalized check-in call from our pharmacy team before your refill date.</li>
+                  </ul>
+                 <p class="text-neutral">Interested? <button onclick="showPage('contact')" class="text-primary hover:underline">Contact us</button> today to ask about enrolling in our Med Sync program.</p>
+              </div>
+         </section>
+
+        <section id="about" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-6 text-center">අප ගැන - Hiru Pharmacy</h2>
+             <div class="bg-white p-8 rounded-lg shadow-lg mb-10"> /* Pharmacy Story */ </div>
+             <div class="grid md:grid-cols-2 gap-8 mb-10"> /* Mission & Values */ </div>
+             <div class="mb-10">
+                 <h3 class="text-2xl font-semibold text-primary-dark mb-4 text-center">අපේ වෘත්තීය කණ්ඩායම</h3>
+                 <p class="text-center text-neutral mb-6 sinhala-text">අපගේ ලියාපදිංචි ඖෂධවේදීන් සහ පුහුණු කාර්ය මණ්ඩලය ඔබට ඉහළම සේවාවක් ලබා දීමට කැපවී සිටී.</p>
+                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="content-card text-center">
+                        <div class="w-24 h-24 rounded-full bg-neutral-light mx-auto mb-3 flex items-center justify-center text-neutral italic text-sm">Pharmacist Photo Placeholder</div>
+                        <p class="font-bold text-lg">Pharmacist Name</p>
+                        <p class="text-sm text-primary font-semibold">Chief Pharmacist</p>
+                        <p class="text-xs text-neutral mt-1">B.Pharm (University), SLMC Reg. No: XXXXX</p>
+                        <p class="text-sm text-neutral mt-2">"Brief quote about commitment to patient care..."</p>
+                    </div>
+                     </div>
+             </div>
+             <div class="mb-10 content-card text-center">
+                 <h3 class="text-xl font-semibold text-primary-dark mb-2">ලියාපදිංචිය සහ බලපත්‍රය</h3>
+                 <p class="text-neutral">Hiru Pharmacy is fully licensed and regulated by the National Medicines Regulatory Authority (NMRA) of Sri Lanka.</p>
+                 <p class="text-neutral mt-1">Pharmacy Registration No: <strong class="text-neutral-dark">[Your Pharmacy License Number Placeholder]</strong></p>
+              </div>
+             <div> /* Testimonials */ </div>
+        </section>
+
+        <section id="contact" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">අප හා සම්බන්ධ වන්න</h2>
+              <div class="grid md:grid-cols-2 gap-10">
+                 <div class="content-card"> /* Form here */ </div>
+                  <div class="space-y-6">
+                    <div class="content-card"> /* Contact Details & Hours */ </div>
+                    <div class="content-card">
+                        <h3 class="text-xl font-semibold text-primary-dark mb-3">අපව සොයාගන්න</h3>
+                        <div id="map-placeholder" class="w-full h-64 ..."> Map Area Placeholder </div>
+                    </div>
+                    <div> /* p5 Canvas */ </div>
+                 </div>
+             </div>
+        </section>
+
+         <section id="user-account" class="page animated-section requires-backend">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">My Account Dashboard</h2>
+             <div class="content-card max-w-4xl mx-auto grid md:grid-cols-3 gap-6">
+                 <div class="md:col-span-1 border-r pr-6">
+                     <h3 class="font-semibold mb-4">Welcome, [User Name]!</h3>
+                     <nav class="space-y-2 text-sm">
+                         <button class="block w-full text-left font-semibold text-primary">Dashboard</button>
+                         <button class="block w-full text-left hover:text-primary">Order History</button>
+                         <button class="block w-full text-left hover:text-primary">My Prescriptions</button>
+                         <button class="block w-full text-left hover:text-primary">Address Book</button>
+                         <button class="block w-full text-left hover:text-primary">Account Settings</button>
+                         <button class="block w-full text-left text-red-600 hover:underline">Logout</button>
+                     </nav>
+                 </div>
+                 <div class="md:col-span-2">
+                    <h4 class="font-semibold mb-4">Recent Orders</h4>
+                    <div class="text-neutral italic">Order history placeholder...</div>
+                    <h4 class="font-semibold mt-6 mb-4">Manage Prescriptions</h4>
+                     <div class="text-neutral italic">Prescription management placeholder...</div>
+                 </div>
+             </div>
+         </section>
+         <section id="login" class="page animated-section requires-backend">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Login to Your Account</h2>
+              <div class="max-w-md mx-auto content-card">
+                 <form class="space-y-4">
+                    <input type="email" placeholder="Email Address" required class="input-field"/>
+                    <input type="password" placeholder="Password" required class="input-field"/>
+                    <div class="flex justify-between items-center text-sm">
+                        <label class="flex items-center gap-2"><input type="checkbox" class="form-checkbox"/> Remember Me</label>
+                        <a href="#" class="text-primary hover:underline">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="button-primary w-full">Login</button>
+                 </form>
+                 <p class="text-center text-sm mt-4">Don't have an account? <button onclick="showPage('register')" class="text-primary hover:underline font-semibold">Register Now</button></p>
+              </div>
+         </section>
+          <section id="register" class="page animated-section requires-backend">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Create New Account</h2>
+              <div class="max-w-md mx-auto content-card">
+                 <form class="space-y-4">
+                    <input type="text" placeholder="Full Name" required class="input-field"/>
+                    <input type="email" placeholder="Email Address" required class="input-field"/>
+                     <input type="tel" placeholder="Phone Number" required class="input-field"/>
+                    <input type="password" placeholder="Create Password" required class="input-field"/>
+                     <input type="password" placeholder="Confirm Password" required class="input-field"/>
+                     <div class="text-xs text-neutral"><input type="checkbox" required class="mr-1"/> I agree to the <a href="#" onclick="showPage('policy-terms'); return false;" class="text-primary underline">Terms of Service</a> and <a href="#" onclick="showPage('policy-privacy'); return false;" class="text-primary underline">Privacy Policy</a>.</div>
+                    <button type="submit" class="button-primary w-full">Register</button>
+                 </form>
+                 <p class="text-center text-sm mt-4">Already have an account? <button onclick="showPage('login')" class="text-primary hover:underline font-semibold">Login Here</button></p>
+              </div>
+         </section>
+         <section id="cart" class="page animated-section requires-backend">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Shopping Cart</h2>
+              <div class="max-w-4xl mx-auto content-card">
+                <div class="cart-items-list border-b pb-4 mb-4">
+                    <div class="flex items-center gap-4 py-2">
+                        <div class="w-16 h-16 bg-neutral-light rounded flex items-center justify-center text-xs italic">Img</div>
+                        <div class="flex-grow">
+                            <p class="font-semibold">Product Name Placeholder</p>
+                            <p class="text-sm text-neutral">Rs. XXXX.XX</p>
+                        </div>
+                         <div>Qty: <input type="number" value="1" min="1" class="w-12 border rounded p-1 text-sm"/></div>
+                         <p class="font-semibold w-20 text-right">Rs. XXXX.XX</p>
+                         <button class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                     </div>
+                     <p class="text-center text-neutral italic mt-4">Your cart is currently empty.</p> </div>
+                 <div class="cart-summary text-right space-y-2">
+                     <p>Subtotal: <span class="font-semibold">Rs. 0.00</span></p>
+                     <p>Estimated Delivery: <span class="font-semibold">Rs. 0.00</span></p>
+                     <p class="text-xl font-bold">Total: <span class="font-semibold">Rs. 0.00</span></p>
+                     <button class="button-primary mt-4">Proceed to Checkout</button>
+                 </div>
+              </div>
+         </section>
+
+         <section id="policy-privacy" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Privacy Policy</h2>
+             <div class="max-w-3xl mx-auto content-card">
+                 <p class="text-neutral italic">Placeholder for Privacy Policy content. This should detail how user data (personal info, health info, Browse data) is collected, used, stored, and protected, in compliance with Sri Lankan regulations (like the upcoming Personal Data Protection Act, if applicable) and best practices.</p>
+                 </div>
+         </section>
+          <section id="policy-terms" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Terms of Service</h2>
+             <div class="max-w-3xl mx-auto content-card">
+                 <p class="text-neutral italic">Placeholder for Terms of Service content. This should outline the rules for using the website, disclaimers, limitations of liability, governing law (Sri Lanka), intellectual property rights, user responsibilities, etc.</p>
+                 </div>
+         </section>
+         <section id="policy-returns" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Returns & Refund Policy</h2>
+              <div class="max-w-3xl mx-auto content-card">
+                 <h3 class="font-semibold mb-2">Medications:</h3>
+                 <p class="text-neutral mb-4">Due to health regulations and safety standards in Sri Lanka, dispensed prescription and over-the-counter medications cannot be returned or refunded once they have left the pharmacy premises, except in cases of dispensing errors or recalls.</p>
+                 <h3 class="font-semibold mb-2">Other Products:</h3>
+                 <p class="text-neutral mb-4">Unopened and undamaged non-medicinal products (e.g., personal care items, medical devices in original packaging) may be eligible for return or exchange within [e.g., 7 days] of purchase, with the original receipt. Please contact us for specific cases.</p>
+                 <p class="text-neutral italic">This is a placeholder policy. Consult local regulations for specifics.</p>
+                 </div>
+         </section>
+         <section id="policy-prescription" class="page animated-section">
+             <h2 class="text-3xl font-bold text-primary-dark mb-8 text-center">Prescription Policy</h2>
+              <div class="max-w-3xl mx-auto content-card">
+                  <p class="text-neutral mb-4">Hiru Pharmacy adheres strictly to the regulations set forth by the National Medicines Regulatory Authority (NMRA) regarding the dispensing of prescription medications.</p>
+                  <ul class="list-disc list-inside space-y-2 text-neutral">
+                      <li>A valid, original prescription from a medical practitioner registered in Sri Lanka is mandatory for all prescription drugs.</li>
+                      <li>Prescriptions must be legible and contain all required information (Patient details, Doctor details & registration, Drug name, strength, dosage, duration, date).</li>
+                      <li>We reserve the right to verify any prescription with the prescribing doctor.</li>
+                      <li>Uploaded prescriptions are subject to verification before dispensing. The original prescription may be required upon collection/delivery as per regulations.</li>
+                      <li>We maintain patient confidentiality in accordance with our Privacy Policy.</li>
+                  </ul>
+                   </div>
+         </section>
+
+
+    </main>
+
+    <footer class="bg-neutral-dark text-neutral-light text-center py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4">
+             <div class="grid md:grid-cols-3 gap-6 mb-6 text-sm text-left"> /* ... */ </div>
+             <div class="border-t border-neutral pt-6 text-xs text-neutral">
+                &copy; <span id="current-year"></span> Hiru Pharmacy. All rights reserved. |
+                <a href="#" onclick="showPage('policy-privacy'); return false;" class="hover:text-white hover:underline">Privacy Policy</a> |
+                <a href="#" onclick="showPage('policy-terms'); return false;" class="hover:text-white hover:underline">Terms of Service</a> |
+                 <a href="#" onclick="showPage('policy-returns'); return false;" class="hover:text-white hover:underline">Returns Policy</a> |
+                 <a href="#" onclick="showPage('policy-prescription'); return false;" class="hover:text-white hover:underline">Prescription Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .input-field { /* Example shared style for form inputs */
+             @apply w-full border border-neutral-light p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light text-sm;
+        }
+        .button-primary { /* Example shared style for primary buttons */
+             @apply bg-primary text-white px-6 py-2 rounded-full hover:bg-primary-dark transition duration-300 font-semibold text-sm;
+        }
+         .button-secondary { /* Example shared style for secondary buttons */
+             @apply bg-neutral-light text-neutral-dark px-4 py-1 rounded-full hover:bg-neutral transition duration-300 font-semibold text-xs;
+        }
+         .form-checkbox { /* Style checkboxes */
+            @apply h-4 w-4 text-primary focus:ring-primary-light border-neutral-light rounded;
+         }
+    </style>
+
+    <script type="module">
+        // Import three.js (As before)
+        import * as THREE from 'three';
+        // import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Global Variables ---
+        const pages = document.querySelectorAll('.page');
+        const navLinks = document.querySelectorAll('.nav-link, .dropdown-menu button, .dropdown-menu a'); // Include dropdown items
+        const nav = document.getElementById('main-nav');
+        const body = document.body;
+         let currentP5Instance = null; // To manage p5 instance
+         let currentThreeInstance = { scene: null, camera: null, renderer: null, mesh: null, animationFrameId: null }; // To manage Three.js instance
+
+        // --- Page Navigation Logic ---
+        function showPage(pageId, params = {}) {
+            console.log(`Navigating to: ${pageId}`);
+
+             // Stop existing animations/render loops if switching away from pages with them
+            if (currentP5Instance) {
+                // Check if the new page *doesn't* have the p5 container
+                const targetPageHasP5 = document.getElementById(pageId)?.querySelector('#p5-canvas-container');
+                if (!targetPageHasP5) {
+                     console.log("Removing p5 instance");
+                    currentP5Instance.remove();
+                    currentP5Instance = null;
+                     const p5Container = document.getElementById('p5-canvas-container');
+                     if (p5Container) p5Container.innerHTML = 'p5.js Canvas Placeholder'; // Clear placeholder
+                }
+            }
+            if (currentThreeInstance.renderer) {
+                 // Check if the new page *doesn't* have the threejs container
+                 const targetPageHasThree = document.getElementById(pageId)?.querySelector('#threejs-canvas-container');
+                 if (!targetPageHasThree) {
+                     console.log("Stopping Three.js animation frame");
+                    if (currentThreeInstance.animationFrameId) {
+                         cancelAnimationFrame(currentThreeInstance.animationFrameId);
+                         currentThreeInstance.animationFrameId = null;
+                    }
+                     // Consider disposing of resources if memory is a concern
+                    // currentThreeInstance.renderer.dispose(); // etc.
+                    // currentThreeInstance = { scene: null, camera: null, renderer: null, mesh: null, animationFrameId: null };
+                    // For simplicity here, we just stop the loop, but don't fully destroy/recreate
+                    // If you always want it on the home page, logic needs adjustment
+                     const threeContainer = document.getElementById('threejs-canvas-container');
+                     if (threeContainer && threeContainer.firstChild instanceof HTMLCanvasElement) {
+                         // Optionally hide or clear the container content when not on the home page
+                         // threeContainer.style.display = 'none'; // or clear innerHTML
+                     }
+                 } else {
+                     // If navigating back to the page with Three.js, restart animation if stopped
+                     if (!currentThreeInstance.animationFrameId && currentThreeInstance.renderer) {
+                         console.log("Restarting Three.js animation frame");
+                         animateThreeJS();
+                     }
+                 }
+            }
+
+
+            // Hide all pages and reset animation classes
+            pages.forEach(p => {
+                p.classList.remove('active');
+                p.classList.remove('animate-fade-in', 'animate-slide-up');
+            });
+
+            // Remove active class from all nav links (including dropdowns)
+             navLinks.forEach(link => link.classList.remove('active'));
+
+            // Find and show the target page
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                targetPage.classList.add('animate-fade-in'); // Use consistent animation for now
+                 console.log(`Page ${pageId} activated`);
+
+                // Initialize p5/ThreeJS if the target page contains their containers
+                const p5Container = targetPage.querySelector('#p5-canvas-container');
+                if (p5Container && !currentP5Instance) {
+                    console.log("Initializing p5.js");
+                    initP5JS(p5Container);
+                }
+
+                 const threeContainer = targetPage.querySelector('#threejs-canvas-container');
+                if (threeContainer && !currentThreeInstance.renderer) {
+                     console.log("Initializing Three.js");
+                     initThreeJS(threeContainer);
+                } else if (threeContainer && currentThreeInstance.renderer && !currentThreeInstance.animationFrameId) {
+                     // If instance exists but loop was stopped, restart it
+                     console.log("Restarting existing Three.js animation frame");
+                    animateThreeJS();
+                }
+                // Ensure canvas resize happens after page is potentially visible
+                setTimeout(() => {
+                    onWindowResize(); // Trigger resize for both Three and potentially p5
+                 }, 50);
+
+            } else {
+                 console.warn(`Page with ID ${pageId} not found.`);
+                // Optionally show a default page like 'home' or an error page
+                showPage('home'); // Fallback to home
+                return; // Exit early
+            }
+
+             // Update active nav link highlighting
+            updateActiveNavLink(pageId);
+
+            // Scroll to top or specific element if needed (example: prescription upload section)
+            if (params.scrollTo) {
+                const elementToScroll = document.getElementById(params.scrollTo);
+                if(elementToScroll) {
+                    elementToScroll.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        window.showPage = showPage; // Make accessible globally
+
+         // Helper to update active nav link based on page ID
+         function updateActiveNavLink(pageId) {
+             navLinks.forEach(link => {
+                // Check onclick attribute or href for matching pageId
+                 const onclickAttr = link.getAttribute('onclick');
+                 const hrefAttr = link.getAttribute('href');
+                 let linkTargetId = null;
+
+                 if (onclickAttr && onclickAttr.includes(`showPage('${pageId}'`)) {
+                     linkTargetId = pageId;
+                 } else if (hrefAttr && hrefAttr.includes(`showPage('${pageId}'`)) { // For links using href="#" onclick="..."
+                     linkTargetId = pageId;
+                 }
+                // Add more specific checks based on page hierarchy if needed (e.g., highlight parent dropdown)
+
+                 if(linkTargetId === pageId){
+                     link.classList.add('active');
+                     // If it's in a dropdown, also highlight the parent dropdown button (optional)
+                     const dropdown = link.closest('.dropdown');
+                     if(dropdown) {
+                         const dropdownButton = dropdown.querySelector('button.nav-link');
+                         if(dropdownButton) dropdownButton.classList.add('active'); // Highlight parent too
+                     }
+                 }
+             });
+         }
+
+
+        // --- Sticky Navigation --- (As before)
+        window.addEventListener('scroll', () => { /* ... */ });
+
+        // --- Footer Year --- (As before)
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // --- Basic Form Handling --- (As before, potentially add more forms)
+        const contactForm = document.getElementById('contact-form'); /* ... */
+
+        // --- p5.js Sketch Logic ---
+        function initP5JS(containerElement) {
+            if (!containerElement) return;
+             containerElement.innerHTML = ''; // Clear placeholder text
+
+            let p5Sketch = function(p) {
+                // Particle class and sketch logic (as defined previously)
+                 let particles = []; const numParticles = 50;
+                 class Particle { /* ... constructor, update, show, edges ... */ }
+
+                p.setup = function() {
+                    let canvas = p.createCanvas(containerElement.offsetWidth, containerElement.offsetHeight);
+                    canvas.parent(containerElement.id); // Attach to the specific container ID
+                     for (let i = 0; i < numParticles; i++) particles.push(new Particle());
+                    p.clear();
+                };
+                p.draw = function() { p.clear(); for (let particle of particles) { particle.update(); particle.show(); } };
+                p.windowResized = function() {
+                    if (containerElement.offsetWidth > 0 && containerElement.offsetHeight > 0) {
+                        p.resizeCanvas(containerElement.offsetWidth, containerElement.offsetHeight);
+                        p.clear();
+                    }
+                };
+            };
+            currentP5Instance = new p5(p5Sketch);
+        }
+
+        // --- Three.js Logic ---
+        function initThreeJS(containerElement) {
+             if (!containerElement || currentThreeInstance.renderer) return; // Don't re-initialize if already exists
+             containerElement.innerHTML = ''; // Clear placeholder text
+
+             try {
+                 const width = containerElement.offsetWidth;
+                 const height = containerElement.offsetHeight;
+
+                 currentThreeInstance.scene = new THREE.Scene();
+                 currentThreeInstance.scene.background = new THREE.Color(0xf0fdf4);
+
+                 currentThreeInstance.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+                 currentThreeInstance.camera.position.z = 5;
+
+                 currentThreeInstance.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                 currentThreeInstance.renderer.setSize(width, height);
+                 currentThreeInstance.renderer.setPixelRatio(window.devicePixelRatio);
+                 containerElement.appendChild(currentThreeInstance.renderer.domElement);
+
+                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); currentThreeInstance.scene.add(ambientLight);
+                 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); directionalLight.position.set(5, 10, 7.5); currentThreeInstance.scene.add(directionalLight);
+
+                 const geometry = new THREE.IcosahedronGeometry(1.5, 0);
+                 const material = new THREE.MeshStandardMaterial({ color: 0x1a9d55, roughness: 0.5, metalness: 0.2 });
+                 currentThreeInstance.mesh = new THREE.Mesh(geometry, material);
+                 currentThreeInstance.scene.add(currentThreeInstance.mesh);
+
+                // Start animation loop
+                 animateThreeJS();
+
+             } catch(error) {
+                 console.error("Error initializing Three.js:", error);
+                 containerElement.innerHTML = "Failed to load 3D element.";
+                 currentThreeInstance = { scene: null, camera: null, renderer: null, mesh: null, animationFrameId: null }; // Reset state on error
+             }
+        }
+
+        function animateThreeJS() {
+            if (!currentThreeInstance.renderer) return; // Stop if renderer doesn't exist
+
+            currentThreeInstance.animationFrameId = requestAnimationFrame(animateThreeJS);
+
+            if (currentThreeInstance.mesh) {
+                currentThreeInstance.mesh.rotation.x += 0.005;
+                currentThreeInstance.mesh.rotation.y += 0.007;
+            }
+
+            currentThreeInstance.renderer.render(currentThreeInstance.scene, currentThreeInstance.camera);
+        }
+
+         // --- Window Resize Handling ---
+         function onWindowResize() {
+             // Resize Three.js
+             const threeContainer = document.querySelector('#threejs-canvas-container:has(canvas)'); // Find container only if canvas exists
+             if (currentThreeInstance.camera && currentThreeInstance.renderer && threeContainer) {
+                 const width = threeContainer.offsetWidth;
+                 const height = threeContainer.offsetHeight;
+                 if (width > 0 && height > 0) {
+                     currentThreeInstance.camera.aspect = width / height;
+                     currentThreeInstance.camera.updateProjectionMatrix();
+                     currentThreeInstance.renderer.setSize(width, height);
+                 }
+             }
+             // Resize p5.js (p5's own resize handler should trigger via window event)
+             if (currentP5Instance) {
+                 window.dispatchEvent(new Event('resize'));
+             }
+         }
+         window.addEventListener('resize', onWindowResize, false);
+
+         // --- Initial Page Load ---
+         // Determine initial page based on URL hash or default to 'home'
+         let initialPageId = window.location.hash.substring(1) || 'home';
+         // Basic validation: check if element exists, otherwise default to home
+         if (!document.getElementById(initialPageId)) {
+             initialPageId = 'home';
+         }
+         showPage(initialPageId);
+
+          // Update URL hash on page change (optional, for bookmarking/back button)
+          window.addEventListener('hashchange', () => {
+              const hashPageId = window.location.hash.substring(1);
+              if(hashPageId && document.getElementById(hashPageId)) {
+                  // Check if it's different from the currently displayed page to avoid loops
+                  const activePage = document.querySelector('.page.active');
+                  if (!activePage || activePage.id !== hashPageId) {
+                      showPage(hashPageId);
+                  }
+              } else if (!hashPageId) {
+                  // If hash is removed, go to home
+                   showPage('home');
+              }
+          });
+
+          // Add hash to URL when navigating via showPage
+          const originalShowPage = window.showPage;
+          window.showPage = function(pageId, params = {}) {
+              originalShowPage(pageId, params);
+              // Update hash, but avoid triggering hashchange listener immediately
+              // Use replaceState to avoid polluting history excessively for simple clicks
+               if(window.location.hash !== `#${pageId}`) {
+                   history.replaceState(null, null, `#${pageId}`);
+               }
+          }
+
+          console.log("Hiru Pharmacy Comprehensive UI Initialized. Current time:", new Date().toLocaleTimeString());
+
+
+    </script>
+
+</body>
+</html>
